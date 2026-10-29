@@ -34,6 +34,7 @@ input,select{background:var(--bg);border:1px solid var(--bd);border-radius:8px;p
 .note{font-size:.9rem}.note b{color:var(--pri)}
 #out{white-space:pre-wrap;margin-top:8px;min-height:40px}
 .hist{font-size:.82rem;color:var(--mut)}
+.copy{text-align:center;color:var(--mut);font-size:.82rem;border-top:1px solid var(--bd);padding:12px 0 4px;margin-top:8px}
 .bars.drag{touch-action:none}.bars.drag .b{cursor:grab;user-select:none}
 </style></head><body><main>
 <h1>🧩 Thuật toán vui: Tìm kiếm và Sắp xếp</h1>
@@ -66,6 +67,7 @@ input,select{background:var(--bg);border:1px solid var(--bd);border-radius:8px;p
 <div class="row"><input id="q" size="34" placeholder="Em hỏi gì cũng được về thuật toán này…"><button id="send">Gửi</button></div>
 <div id="out"></div></div>
 <p class="sub">Gợi ý: dãy ngắn (5–8 số) giúp dễ quan sát hơn.</p>
+<footer class="copy">© 2026 Lê Xuân Hiến – Trường THCS Cẩm Vân, xã Cẩm Vân, tỉnh Thanh Hóa.<br>Bản quyền thuộc về tác giả.</footer>
 </main>
 <script>
 const $=id=>document.getElementById(id);
