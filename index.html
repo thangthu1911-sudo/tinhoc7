@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thuật toán vui – Tìm kiếm và Sắp xếp (Tin học 7)</title>
+<style>
+:root{box-sizing:border-box;--bg:#f6f5f0;--card:#fff;--tx:#2c2c2a;--mut:#6b6a64;--bd:#d9d7cd;--pri:#378add;--pt:#fff;--bar:#b4b2a9;--cmp:#ef9f27;--min:#378add;--swap:#e24b4a;--done:#1d9e75;--mid:#7f77dd;--soft:#eef4fb;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#1e1e1c;--card:#2a2a27;--tx:#ecebe4;--mut:#a3a29a;--bd:#454540;--bar:#6f6e66;--soft:#25303d}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#1e1e1c;--card:#2a2a27;--tx:#ecebe4;--mut:#a3a29a;--bd:#454540;--bar:#6f6e66;--soft:#25303d}
+*,*:before,*:after{box-sizing:inherit}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,"Segoe UI",Roboto,sans-serif}
+main{max-width:920px;margin:0 auto;padding:14px}
+h1{font-size:1.25rem;margin:4px 0 2px}p.sub{margin:0 0 12px;color:var(--mut);font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+button,select,input{font:inherit;color:var(--tx)}
+button{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--pri)}button:disabled{opacity:.4;cursor:default}
+button.on{background:var(--pri);color:var(--pt);border-color:var(--pri)}
+input,select{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 8px;max-width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.row label{font-size:.85rem;color:var(--mut)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:230px;padding:8px 4px 0;overflow-x:auto}
+.col{flex:1;min-width:30px;max-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.b{width:100%;border-radius:8px 8px 0 0;background:var(--bar);display:flex;justify-content:center;align-items:flex-start;color:#fff;font-weight:600;padding-top:4px;transition:height .3s,background .25s,opacity .25s,transform .25s}
+.b.cmp{background:var(--cmp)}.b.min{background:var(--min)}.b.swap{background:var(--swap);transform:translateY(-8px)}.b.done,.b.found{background:var(--done)}.b.mid{background:var(--mid)}.b.dim{opacity:.22}
+.b.found{outline:3px solid var(--done);outline-offset:2px}
+.tag{min-height:22px;font-size:.72rem;color:var(--mut);text-align:center;line-height:1.1;padding-top:4px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.78rem;color:var(--mut);margin-top:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.msg{min-height:64px;background:var(--soft);border-radius:8px;padding:10px;margin-top:10px}
+.stat{display:flex;gap:14px;font-size:.88rem;color:var(--mut);margin-top:8px;flex-wrap:wrap}.stat b{color:var(--tx)}
+.ok{color:var(--done);font-weight:600}.no{color:var(--swap);font-weight:600}
+.note{font-size:.9rem}.note b{color:var(--pri)}
+#out{white-space:pre-wrap;margin-top:8px;min-height:40px}
+.hist{font-size:.82rem;color:var(--mut)}
+.bars.drag{touch-action:none}.bars.drag .b{cursor:grab;user-select:none}
+</style></head><body><main>
+<h1>🧩 Thuật toán vui: Tìm kiếm và Sắp xếp</h1>
+<p class="sub">Tin học 7 · Xem từng bước chạy, tự dự đoán, và hỏi trợ lý AI khi chưa hiểu.</p>
+
+<div class="card"><div class="tabs" id="tabs"></div>
+<div class="note" id="idea" style="margin-top:10px"></div></div>
+
+<div class="card">
+<div class="row" style="margin:0 0 4px">
+<label>Dãy số (cách nhau bởi dấu phẩy)</label><input id="inp" size="26">
+<span id="tw"><label>Số cần tìm</label> <input id="tgt" size="4" inputmode="numeric"></span>
+<button id="apply">Áp dụng</button><button id="rnd">🎲 Dãy ngẫu nhiên</button></div>
+<div class="row"><label>Chế độ</label><button id="mLearn" class="on">👀 Xem mẫu</button><button id="mQuiz">🎯 Tự dự đoán</button><button id="mDrag">✋ Tự sắp xếp</button><span id="score" class="note"></span></div>
+<div class="bars" id="bars" aria-live="polite"></div>
+<div class="legend" id="legend"></div>
+<div class="legend" id="dleg" hidden>Kéo một thẻ thả lên thẻ khác để đổi chỗ hai thẻ đó. Trên điện thoại: chạm thẻ thứ nhất rồi chạm thẻ thứ hai.</div>
+<div class="msg" id="msg"></div>
+<div class="row" id="qrow" hidden><button id="yes">✅ Có</button><button id="not">❌ Không</button></div>
+<div class="row" id="drow" hidden><button id="hint">💡 Gợi ý</button><button id="undo">↩ Hoàn tác</button><button id="redo2">🔄 Làm lại</button><span class="note">Số lần đổi chỗ: <b id="dsw">0</b></span></div>
+<div class="stat" id="stat"><span>Bước: <b id="sn"></b></span><span>Số lần so sánh: <b id="sc">0</b></span><span id="ss">Số lần đổi chỗ: <b id="sw">0</b></span></div>
+<div class="row" id="ctl"><button id="first">⏮</button><button id="prev">◀ Lùi</button><button id="play">▶ Chạy tự động</button><button id="next">Tiếp ▶</button>
+<label>🐢 Chậm</label><input type="range" id="spd" min="1" max="8" value="6"><label>Nhanh 🐇</label></div>
+</div>
+
+<div class="card" id="ai" hidden>
+<b>🤖 Trợ lý AI</b>
+<div class="row"><label>Mức hỗ trợ</label><select id="lvl"><option value="b">Em cần hướng dẫn thật kỹ</option><option value="n" selected>Bình thường</option><option value="a">Em muốn thử thách</option></select></div>
+<div class="row"><button data-q="Giải thích bước hiện tại cho em hiểu.">Giải thích bước này</button><button data-q="Cho em một ví dụ đời thường giống thuật toán này.">Ví dụ đời thường</button><button data-q="Ra cho em một câu hỏi nhỏ về dãy số hiện tại để em tự làm, đừng nói đáp án.">Ra câu hỏi cho em</button></div>
+<div class="row"><input id="q" size="34" placeholder="Em hỏi gì cũng được về thuật toán này…"><button id="send">Gửi</button></div>
+<div id="out"></div></div>
+<p class="sub">Gợi ý: dãy ngắn (5–8 số) giúp dễ quan sát hơn.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const ALG={
+seq:{n:'Tìm kiếm tuần tự',s:1,idea:'<b>Ý tưởng:</b> mở lần lượt từng thẻ từ đầu dãy, so với số cần tìm cho đến khi thấy hoặc hết dãy. <b>Giống như:</b> tìm một bạn trong hàng, hỏi từng bạn một. Dãy <b>không cần</b> sắp xếp.'},
+bin:{n:'Tìm kiếm nhị phân',s:1,idea:'<b>Ý tưởng:</b> mở thẻ ở giữa, nếu chưa đúng thì loại bỏ một nửa dãy rồi lặp lại. <b>Giống như:</b> đoán số trong trò “cao hơn hay thấp hơn”. Dãy <b>phải được sắp xếp tăng dần</b> trước.'},
+sel:{n:'Sắp xếp chọn',idea:'<b>Ý tưởng:</b> mỗi lượt chọn số nhỏ nhất trong phần chưa xếp rồi đưa lên đầu phần đó. <b>Giống như:</b> chọn bạn thấp nhất xếp lên đầu hàng, rồi lại chọn bạn thấp nhất trong những bạn còn lại.'},
+bub:{n:'Sắp xếp nổi bọt',idea:'<b>Ý tưởng:</b> so sánh hai số cạnh nhau, nếu sai thứ tự thì đổi chỗ; số lớn dần “nổi” về cuối dãy. <b>Giống như:</b> bọt khí nổi lên mặt nước; mỗi lượt có một số về đúng chỗ.'}};
+const LEG={cmp:'Đang so sánh',min:'Số nhỏ nhất tạm thời',swap:'Vừa đổi chỗ',done:'Đã đúng vị trí / tìm thấy',mid:'Thẻ ở giữa'};
+let algo='seq',arr=[],tg=0,S=[],k=0,timer=null,mode='learn',ans={},ok=0,asked=0,hist=[];
+const dn=(o,a,b)=>{for(let i=a;i<b;i++)o[i]='done';return o};
+const tag=(o,i,s)=>{o[i]=o[i]?o[i]+'/'+s:s};
+function gSeq(a,t){const R=[];let c=0;
+ for(let i=0;i<a.length;i++){c++;const e=a[i]===t;
+  R.push({a,cls:{[i]:e?'found':'cmp'},tags:{[i]:'đang mở'},q:`Thẻ ${a[i]} có bằng ${t} không?`,ans:e,msg:e?`Thẻ thứ ${i+1} là ${a[i]} = ${t}. Tìm thấy rồi, dừng lại!`:`Thẻ thứ ${i+1} là ${a[i]} ≠ ${t}. Mở thẻ tiếp theo.`,c,s:0});if(e)return R}
+ R.push({a,cls:{},tags:{},msg:`Đã mở hết dãy mà không thấy ${t}. Kết luận: ${t} không có trong dãy.`,c,s:0});return R}
+function gBin(a,t){const R=[];let lo=0,hi=a.length-1,c=0;
+ while(lo<=hi){const m=(lo+hi)>>1;c++;const e=a[m]===t,cls={},tags={};
+  a.forEach((_,i)=>{if(i<lo||i>hi)cls[i]='dim'});cls[m]=e?'found':'mid';
+  tag(tags,lo,'đầu');tag(tags,hi,'cuối');tag(tags,m,'giữa');
+  R.push({a,cls,tags,q:`Thẻ giữa (${a[m]}) có bằng ${t} không?`,ans:e,c,s:0,
+   msg:e?`Thẻ giữa là ${a[m]} = ${t}. Tìm thấy!`:a[m]<t?`${a[m]} < ${t} nên ${t} nằm ở nửa bên phải. Loại bỏ nửa bên trái.`:`${a[m]} > ${t} nên ${t} nằm ở nửa bên trái. Loại bỏ nửa bên phải.`});
+  if(e)return R;if(a[m]<t)lo=m+1;else hi=m-1}
+ const cls={};a.forEach((_,i)=>cls[i]='dim');
+ R.push({a,cls,tags:{},msg:`Không còn thẻ nào để xét. Kết luận: ${t} không có trong dãy.`,c,s:0});return R}
+function gSel(a){a=[...a];const R=[],n=a.length;let c=0,s=0;
+ for(let i=0;i<n-1;i++){let m=i;
+  R.push({a:[...a],cls:{...dn({},0,i),[m]:'min'},tags:{[m]:'min'},msg:`Lượt ${i+1}: tạm coi ${a[m]} ở vị trí ${i+1} là số nhỏ nhất. Hãy xem các số bên phải.`,c,s});
+  for(let j=i+1;j<n;j++){c++;const l=a[j]<a[m];
+   R.push({a:[...a],cls:{...dn({},0,i),[m]:'min',[j]:'cmp'},tags:{[m]:'min',[j]:'đang xét'},q:`${a[j]} có nhỏ hơn số nhỏ nhất hiện tại (${a[m]}) không?`,ans:l,msg:l?`${a[j]} < ${a[m]}: ${a[j]} là số nhỏ nhất mới.`:`${a[j]} ≥ ${a[m]}: giữ nguyên số nhỏ nhất.`,c,s});if(l)m=j}
+  if(m!==i){[a[i],a[m]]=[a[m],a[i]];s++;
+   R.push({a:[...a],cls:{...dn({},0,i),[i]:'swap',[m]:'swap'},tags:{},msg:`Đổi chỗ: đưa số nhỏ nhất ${a[i]} về vị trí ${i+1}.`,c,s})}
+  else R.push({a:[...a],cls:dn({},0,i+1),tags:{},msg:`${a[i]} đã ở đúng chỗ, không cần đổi.`,c,s})}
+ R.push({a,cls:dn({},0,n),tags:{},msg:'Xong! Dãy đã được sắp xếp tăng dần.',c,s});return R}
+function gBub(a){a=[...a];const R=[],n=a.length;let c=0,s=0;
+ for(let p=0;p<n-1;p++){let sw=false;
+  for(let j=0;j<n-1-p;j++){c++;const g=a[j]>a[j+1],base=dn({},n-p,n);
+   R.push({a:[...a],cls:{...base,[j]:'cmp',[j+1]:'cmp'},tags:{},q:`${a[j]} có lớn hơn ${a[j+1]} không (cần đổi chỗ)?`,ans:g,msg:g?`${a[j]} > ${a[j+1]}: sai thứ tự, đổi chỗ.`:`${a[j]} ≤ ${a[j+1]}: đúng thứ tự, giữ nguyên.`,c,s});
+   if(g){[a[j],a[j+1]]=[a[j+1],a[j]];s++;sw=true;R.push({a:[...a],cls:{...base,[j]:'swap',[j+1]:'swap'},tags:{},msg:`Đã đổi chỗ. Số lớn ${a[j+1]} “nổi” sang phải.`,c,s})}}
+  if(!sw){R.push({a:[...a],cls:dn({},0,n),tags:{},msg:'Lượt này không phải đổi chỗ lần nào, vậy dãy đã sắp xếp xong!',c,s});return R}
+  R.push({a:[...a],cls:dn({},n-1-p,n),tags:{},msg:`Hết lượt ${p+1}: số lớn nhất ${a[n-1-p]} đã về đúng chỗ.`,c,s})}
+ R.push({a,cls:dn({},0,n),tags:{},msg:'Xong! Dãy đã được sắp xếp tăng dần.',c,s});return R}
+function build(){stop();const A=ALG[algo];const dm=mode==='drag';$('drow').hidden=!dm;$('dleg').hidden=!dm;$('legend').hidden=dm;$('stat').hidden=$('ctl').hidden=dm;$('qrow').hidden=true;$('bars').classList.toggle('drag',dm);if(dm){dragInit();return}let base=[...arr];if(algo==='bin')base.sort((x,y)=>x-y);
+ const g={seq:()=>gSeq(base,tg),bin:()=>gBin(base,tg),sel:()=>gSel(base),bub:()=>gBub(base)}[algo]();
+ const st=A.s?`Dãy ${algo==='bin'?'(đã sắp xếp)':''}: cần tìm số ${tg}. Bấm “Tiếp” để bắt đầu.`:'Dãy ban đầu chưa sắp xếp. Bấm “Tiếp” để bắt đầu.';
+ S=[{a:base,cls:{},tags:{},msg:st,c:0,s:0},...g];k=0;ans={};ok=0;asked=0;show()}
+function show(){const st=S[k],mx=Math.max(...st.a);
+ $('bars').innerHTML=st.a.map((v,i)=>`<div class="col"><div class="b ${st.cls[i]||''}" style="height:${Math.max(14,v/mx*88)}%">${v}</div><div class="tag">${st.tags[i]||''}</div></div>`).join('');
+ const pend=mode==='quiz'&&st.q&&ans[k]===undefined;
+ let m=st.msg;if(pend)m='🤔 '+st.q;else if(mode==='quiz'&&st.q)m=(ans[k]?'<span class="ok">Đúng rồi! </span>':'<span class="no">Chưa đúng. </span>')+m;
+ $('msg').innerHTML=m;$('qrow').hidden=!pend;
+ $('sn').textContent=k+'/'+(S.length-1);$('sc').textContent=st.c;$('sw').textContent=st.s;$('ss').style.display=ALG[algo].s?'none':'';
+ $('prev').disabled=$('first').disabled=k===0;$('next').disabled=k===S.length-1||pend;$('play').disabled=mode==='quiz';
+ $('score').textContent=mode==='quiz'?`Điểm: ${ok}/${asked}`:'';}
+function stop(){clearInterval(timer);timer=null;$('play').textContent='▶ Chạy tự động'}
+function go(d){const n=k+d;if(n<0||n>=S.length)return;k=n;show()}
+$('next').onclick=()=>go(1);$('prev').onclick=()=>go(-1);$('first').onclick=()=>{stop();k=0;show()};
+$('play').onclick=()=>{if(timer){stop();return}if(k===S.length-1)k=0;$('play').textContent='⏸ Tạm dừng';
+ timer=setInterval(()=>{if(k>=S.length-1){stop();return}go(1)},[4000,3000,2200,1600,1100,800,550,350][$('spd').value-1])};
+$('spd').oninput=()=>{if(timer){stop();$('play').click()}};
+function reply(v){const st=S[k];if(ans[k]!==undefined)return;ans[k]=v===st.ans;asked++;if(ans[k])ok++;show()}
+$('yes').onclick=()=>reply(true);$('not').onclick=()=>reply(false);
+function setMode(m){mode=m;$('mLearn').className=m==='learn'?'on':'';$('mQuiz').className=m==='quiz'?'on':'';$('mDrag').className=m==='drag'?'on':'';stop();build()}
+$('mLearn').onclick=()=>setMode('learn');$('mQuiz').onclick=()=>setMode('quiz');$('mDrag').onclick=()=>setMode('drag');
+/* Chế độ tự kéo thả */
+let dA=[],dS=0,dH=[],dSel=null,dHint=null,pd=null;
+const dMsg=t=>{$('msg').innerHTML=t;if(S[0])S[0].msg='Học sinh đang tự kéo thả để sắp xếp. '+t.replace(/<[^>]+>/g,'')};
+function dragInit(){dA=[...arr];dS=0;dH=[];dSel=null;dHint=null;S=[{a:dA,cls:{},tags:{},msg:'',c:0,s:0}];k=0;
+ dMsg('✋ Hãy kéo thả để đổi chỗ các thẻ cho dãy tăng dần (nhỏ đến lớn). Bí quá thì bấm “Gợi ý”.');drender()}
+function drender(){const mx=Math.max(...dA);
+ $('bars').innerHTML=dA.map((v,i)=>`<div class="col" data-i="${i}"><div class="b ${dSel===i?'min':dHint&&dHint.includes(i)?'cmp':''}" style="height:${Math.max(14,v/mx*88)}%">${v}</div><div class="tag">vị trí ${i+1}</div></div>`).join('');
+ $('dsw').textContent=dS}
+function dSwap(a,b){dH.push([...dA]);[dA[a],dA[b]]=[dA[b],dA[a]];dS++;dSel=null;dHint=null;drender();
+ const bad=dA.filter((v,i)=>i&&dA[i-1]>v).length;
+ if(!bad)dMsg(`🎉 <span class="ok">Giỏi lắm!</span> Dãy đã sắp xếp xong sau ${dS} lần đổi chỗ. Thuật toán sắp xếp chọn chỉ cần tối đa ${dA.length-1} lần với dãy ${dA.length} số. Em thử làm lại để đổi chỗ ít lần hơn nhé!`);
+ else dMsg(`Đã đổi chỗ ${dA[b]} và ${dA[a]}. Còn ${bad} chỗ hai số liền kề đang sai thứ tự.`)}
+$('hint').onclick=()=>{const s=[...dA].sort((x,y)=>x-y),i=dA.findIndex((v,j)=>v!==s[j]);
+ if(i<0){dMsg('Dãy đã sắp xếp xong rồi! 🎉');return}
+ dHint=[i,dA.indexOf(s[i],i)];drender();
+ dMsg(`💡 Vị trí ${i+1} cần là số nhỏ nhất trong phần còn lại, đó là <b>${s[i]}</b>. Hãy đổi chỗ hai thẻ đang sáng màu cam.`)};
+$('undo').onclick=()=>{const p=dH.pop();if(!p)return;dA.splice(0,dA.length,...p);dS--;dSel=null;dHint=null;drender();dMsg('Đã hoàn tác một lần đổi chỗ.')};
+$('redo2').onclick=dragInit;
+const bars=$('bars');
+bars.onpointerdown=e=>{if(mode!=='drag')return;const c=e.target.closest('.col');if(!c)return;
+ pd={i:+c.dataset.i,x:e.clientX,y:e.clientY,el:c.firstChild,mv:false};bars.setPointerCapture(e.pointerId);e.preventDefault()};
+bars.onpointermove=e=>{if(!pd)return;const dx=e.clientX-pd.x,dy=Math.max(-30,Math.min(30,e.clientY-pd.y));
+ if(Math.abs(dx)>6||Math.abs(dy)>6){pd.mv=true;const s=pd.el.style;s.transition='none';s.position='relative';s.zIndex=5;s.pointerEvents='none';s.transform=`translate(${dx}px,${dy}px)`}};
+bars.onpointerup=e=>{if(!pd)return;const p=pd;pd=null;p.el.style.transform='';
+ const t=document.elementFromPoint(e.clientX,e.clientY),c=t&&t.closest?t.closest('.col'):null,j=c?+c.dataset.i:-1;
+ if(p.mv){if(j>=0&&j!==p.i)dSwap(p.i,j);else drender()}
+ else if(dSel===null){dSel=p.i;drender()}else if(dSel===p.i){dSel=null;drender()}else dSwap(dSel,p.i)};
+bars.onpointercancel=()=>{if(pd){pd=null;drender()}};
+function setAlgo(a){algo=a;const A=ALG[a];$('idea').innerHTML=A.idea;$('tw').style.display=A.s?'':'none';$('mDrag').style.display=A.s?'none':'';if(A.s&&mode==='drag'){mode='learn';$('mLearn').className='on';$('mDrag').className=''}
+ [...$('tabs').children].forEach(b=>b.className=b.dataset.a===a?'on':'');
+ $('legend').innerHTML=(A.s?['cmp','mid','done']:a==='sel'?['cmp','min','swap','done']:['cmp','swap','done']).map(k=>`<span><i style="background:var(--${k==='done'?'done':k})"></i>${LEG[k]}</span>`).join('');
+ hist=[];$('out').textContent='';build()}
+Object.entries(ALG).forEach(([k,v])=>{const b=document.createElement('button');b.textContent=v.n;b.dataset.a=k;b.onclick=()=>setAlgo(k);$('tabs').appendChild(b)});
+function rnd(){const s=new Set();while(s.size<7)s.add(1+Math.floor(Math.random()*60));arr=[...s];tg=arr[Math.floor(Math.random()*arr.length)];
+ if(Math.random()<.2)tg=61;$('inp').value=arr.join(', ');$('tgt').value=tg;build()}
+$('rnd').onclick=rnd;
+$('apply').onclick=()=>{const v=$('inp').value.split(/[,\s;]+/).filter(Boolean).map(Number);
+ if(v.length<2||v.length>12||v.some(x=>!Number.isInteger(x)||x<1||x>99)){$('msg').textContent='Hãy nhập 2 đến 12 số nguyên từ 1 đến 99, cách nhau bởi dấu phẩy.';return}
+ arr=v;const t=parseInt($('tgt').value);tg=Number.isInteger(t)?t:arr[0];build()};
+/* Trợ lý AI: gọi hàm serverless /api/chat (khóa API nằm ở máy chủ, không lộ cho học sinh) */
+let busy=false;$('ai').hidden=false;
+async function ask(q){if(busy||!q.trim())return;busy=true;$('send').disabled=true;const A=ALG[algo],st=S[k];
+ $('out').textContent='Đang suy nghĩ…';
+ try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({algo:A.n,arr:st.a,target:A.s?tg:null,step:st.msg,level:$('lvl').value,history:hist.slice(-4),question:q})});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||'loi');
+  hist.push('HS: '+q,'AI: '+d.text.slice(0,300));$('out').textContent=d.text}
+ catch(e){$('out').textContent=String(e.message).includes('rate')?'Em đợi một chút rồi hỏi lại nhé.':'Trợ lý AI đang bận, em thử lại sau nhé.'}
+ busy=false;$('send').disabled=false}
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>ask(b.dataset.q));
+$('send').onclick=()=>{const v=$('q').value;$('q').value='';ask(v)};
+$('q').onkeydown=e=>{if(e.key==='Enter')$('send').click()};
+rnd();setAlgo('seq');
+</script></body></html>
